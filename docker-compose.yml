@@ -1,0 +1,65 @@
+version: "3"
+
+services:
+
+  rabbit_rabbit:
+    image: rabbitmq:management
+    container_name: "rabbit_mq"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=root
+      - RABBITMQ_DEFAULT_PASS=1234
+
+  rabbit_producer:
+    tty: true
+    build:
+      context: .
+      dockerfile: producer/Dockerfile
+    depends_on:
+      - rabbit_rabbit
+      - mysql
+    volumes:
+      - ./producer/app.py:/app/app.py
+      - ./core:/app/core
+      - ./models:/app/models
+
+  rabbit_consumer:
+    tty: true
+    stdin_open: true
+    build:
+      context: .
+      dockerfile: consumer/Dockerfile
+    depends_on:
+      - rabbit_rabbit
+      - mysql
+    deploy:
+      replicas: 10
+    volumes:
+      - ./consumer/app.py:/app/app.py
+      - ./core:/app/core
+      - ./models:/app/models
+
+  mysql:
+    image: mysql:8.0
+    container_name: "mysql_db"
+    restart: always
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      - PMA_ARBITRARY=1
+
+
+volumes:
+  mysql_data:

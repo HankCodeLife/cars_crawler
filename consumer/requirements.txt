@@ -1,0 +1,7 @@
+pika
+requests
+numpy
+pandas
+sqlalchemy
+pymysql
+cryptography
